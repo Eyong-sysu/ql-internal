@@ -1,5 +1,5 @@
 """
-cron: 1 1 1 1 * ?
+cron: 0 0 1 5 * ?
 new Env('CBDC领取')
 """
 import json
