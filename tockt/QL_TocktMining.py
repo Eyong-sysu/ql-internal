@@ -13,7 +13,7 @@ headers = {
 }
 
 
-class BeeNetworkMining(QLTask):
+class TocktMining(QLTask):
     def __init__(self):
         self.total_count = 0
         self.success_count = 0
@@ -42,8 +42,10 @@ class BeeNetworkMining(QLTask):
                     if resp.text.count('你已启动挖矿请勿重') == 0:
                         raise Exception(resp.text)
                     else:
+                        log.info(f'【{index}】{email}----未到挖矿时间')
                         self.wait_count += 1
                 else:
+                    log.info(f'【{index}】{email}----挖矿成功')
                     self.success_count += 1
                 break
             except Exception as ex:
@@ -70,4 +72,4 @@ class BeeNetworkMining(QLTask):
 
 
 if __name__ == '__main__':
-    main('Tockt挖矿', BeeNetworkMining(), 'TocktToken')
+    main('Tockt挖矿', TocktMining(), 'TocktToken')
