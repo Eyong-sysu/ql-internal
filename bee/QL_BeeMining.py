@@ -26,6 +26,7 @@ class BeeNetworkMining(QLTask):
         self.total_count = 0
         self.success_count = 0
         self.wait_count = 0
+        self.unauthorized = []
         self.fail_email = []
 
     def task(self, index, text, api_url):
@@ -39,21 +40,23 @@ class BeeNetworkMining(QLTask):
 
         log.info(f"【{index}】{email}----正在挖矿")
         headers = get_headers(token)
+
         proxy = get_proxy(api_url)
 
         for i in range(3):
             try:
-                resp = requests.post("https://apis.starnetwork.io/v3/session/start", headers=headers, timeout=15,
-                                     proxies={"https": proxy})
+                resp = requests.post("https://api.bee9527.com/v2/user/mine", params={'clientInfo': get_client_info()},
+                                     headers=headers, timeout=15, proxies={"https": proxy})
                 if resp.text.count('UnauthorizedError') > 0:
-                    log.info(f'【{index}】{email}----登录过期----挖矿失败')
+                    log.error(f'【{index}】{email}----登录过期----挖矿失败')
+                    self.unauthorized.append(f'{email}')
                     return
 
-                if resp.text.count('endAt') == 0:
+                if resp.text.count('balance') == 0:
                     raise Exception(resp.text)
                 else:
                     lock.acquire()
-                    if resp.text.count('NEW_SESSION_STARTED'):
+                    if resp.json()['data']['new']:
                         log.info(f'【{index}】{email}----挖矿成功')
                         self.success_count += 1
                     else:
@@ -74,7 +77,13 @@ class BeeNetworkMining(QLTask):
             log.info(f"-----Fail Statistics-----")
             log_data = ''
             for fail in self.fail_email:
-                log_data += fail
+                log_data += fail + '\n'
+            log.error(f'\n{log_data}')
+        if len(self.unauthorized) > 0:
+            log.info(f"-----Unauthorized Statistics-----")
+            log_data = ''
+            for unauthorized in self.unauthorized:
+                log_data += unauthorized + '\n'
             log.error(f'\n{log_data}')
 
     def save(self):
