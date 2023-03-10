@@ -38,8 +38,10 @@ class TocktMining(QLTask):
                               headers=headers, proxies={"https": proxy})
                 resp = requests.post("https://www.tockt.com:8443/GO/ClickGo", data="uid=" + token + "&langu=1",
                                      timeout=15, headers=headers, proxies={"https": proxy})
+                lock.acquire()
                 if resp.text.count('成功') == 0:
                     if resp.text.count('你已启动挖矿请勿重') == 0:
+                        lock.release()
                         raise Exception(resp.text)
                     else:
                         log.info(f'【{index}】{email}----未到挖矿时间')
@@ -47,6 +49,7 @@ class TocktMining(QLTask):
                 else:
                     log.info(f'【{index}】{email}----挖矿成功')
                     self.success_count += 1
+                lock.release()
                 break
             except Exception as ex:
                 if i != 2:
@@ -68,7 +71,7 @@ class TocktMining(QLTask):
         pass
 
     def push_data(self):
-        return f'总任务数：{self.total_count}\n任务成功数：{self.success_count}\n未到时间数：{self.wait_count}\n任务失败数：{len(self.fail_email)}'
+        return f'总任务数：{self.total_count}\n任务成功数：{self.success_count}\n时间未到数：{self.wait_count}\n任务失败数：{len(self.fail_email)}'
 
 
 if __name__ == '__main__':

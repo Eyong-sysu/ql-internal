@@ -1,5 +1,5 @@
 """
-cron: 0 0 1 5 * ?
+cron: 0 0 1/5 * * ?
 new Env('CBDC领取')
 """
 import json
@@ -53,19 +53,24 @@ class CBDCClaim(QLTask):
                            "requestData": get_request_data(json.dumps(encrypt_sign(data)))}
                 resp = requests.post("https://www.datacbdc.com/user/miningClaim", json=payload, timeout=15,
                                      headers=headers, proxies={"https": proxy})
+                lock.acquire()
                 if resp.text.count('Receive successfully') > 0:
                     log.info(f'【{index}】{email}----领取成功')
                     self.success_count += 1
-                if resp.text.count('Request loading') > 0:
-                    log.info(f'【{index}】{email}----未到领取时间')
+                elif resp.text.count('quest load') > 0:
+                    log.info(f'【{index}】{email}----领取时间未到')
                     self.wait_count += 1
-                if resp.text.count('There is no block to claim') > 0:
+                elif resp.text.count('is no block to claim') > 0:
                     log.info(f'【{index}】{email}----无可领取奖励')
                     self.wait_count += 1
-                msg = resp.text
-                if msg.count('msg') > 0:
-                    msg = resp.json()['msg']
-                raise Exception(msg)
+                else:
+                    lock.release()
+                    msg = resp.text
+                    if msg.count('msg') > 0:
+                        msg = resp.json()['msg']
+                    raise Exception(msg)
+                lock.release()
+                break
             except Exception as ex:
                 if i != 2:
                     log.info(f'【{index}】{email}----进行第{i + 1}次重试----领取出错：{repr(ex)}')
@@ -86,7 +91,7 @@ class CBDCClaim(QLTask):
         pass
 
     def push_data(self):
-        return f'总任务数：{self.total_count}\n任务成功数：{self.success_count}\n未到时间数：{self.wait_count}\n任务失败数：{len(self.fail_email)}'
+        return f'总任务数：{self.total_count}\n任务成功数：{self.success_count}\n时间未到数：{self.wait_count}\n任务失败数：{len(self.fail_email)}'
 
 
 if __name__ == '__main__':
