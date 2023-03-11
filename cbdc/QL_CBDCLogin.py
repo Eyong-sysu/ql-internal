@@ -66,13 +66,13 @@ class CBDCLogin(QLTask):
                     raise Exception(msg)
             except Exception as ex:
                 if repr(ex).count('The account cannot be logged') > 0:
-                    log.info(f'【{index}】{email}----账号封禁')
+                    log.error(f'【{index}】{email}----账号封禁')
                     self.violation_email.append(f'{email}----{password}')
                 if i != 2:
-                    log.info(f'【{index}】{email}----进行第{i + 1}次重试----登录出错：{repr(ex)}')
+                    log.error(f'【{index}】{email}----进行第{i + 1}次重试----登录出错：{repr(ex)}')
                     proxy = get_proxy(api_url)
                 else:
-                    log.info(f'【{index}】{email}----重试完毕----登录出错：{repr(ex)}')
+                    log.error(f'【{index}】{email}----重试完毕----登录出错：{repr(ex)}')
                     self.fail_email.append(f'{email}----{password}----{device_id}----登录出错：{repr(ex)}')
 
     def statistics(self):

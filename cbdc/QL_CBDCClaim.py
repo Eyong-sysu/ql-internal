@@ -10,7 +10,7 @@ import time
 import requests
 
 from utils.CBDCUtil import encrypt_sign, get_request_data
-from utils.CommonUtil import get_proxy, log, lock, write_txt
+from utils.CommonUtil import get_proxy, log, lock
 from utils.QLTask import QLTask, main
 
 headers = {
@@ -73,10 +73,10 @@ class CBDCClaim(QLTask):
                 break
             except Exception as ex:
                 if i != 2:
-                    log.info(f'【{index}】{email}----进行第{i + 1}次重试----领取出错：{repr(ex)}')
+                    log.error(f'【{index}】{email}----进行第{i + 1}次重试----领取出错：{repr(ex)}')
                     proxy = get_proxy(api_url)
                 else:
-                    log.info(f'【{index}】{email}----重试完毕----领取出错：{repr(ex)}')
+                    log.error(f'【{index}】{email}----重试完毕----领取出错：{repr(ex)}')
                     self.fail_email.append(f'【{index}】{email}----领取出错：{repr(ex)}')
 
     def statistics(self):

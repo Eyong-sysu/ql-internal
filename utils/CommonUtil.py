@@ -4,12 +4,8 @@ import re
 import sys
 import threading
 import time
-from abc import ABCMeta, abstractmethod
-from concurrent.futures import ThreadPoolExecutor
 
 import requests
-
-from notify import send
 
 logging.basicConfig(
     level=logging.INFO,
@@ -17,6 +13,8 @@ logging.basicConfig(
     format='%(asctime)s [%(lineno)d] %(levelname)s %(message)s',
 )
 log = logging.getLogger()
+
+lock = threading.RLock()
 
 
 def load_txt(file_name):
@@ -41,12 +39,14 @@ def load_txt(file_name):
 
 
 def write_txt(file_name, text, append=False):
-    """读取文本"""
+    """写入文本"""
+    lock.acquire()
     mode = 'w+'
     if append:
         mode = 'a+'
     with open(sys.path[0] + "/" + file_name + ".txt", mode) as f:
         f.write(text)
+    lock.release()
 
 
 def del_txt(file_name):
@@ -87,8 +87,9 @@ def get_thread_number(size, thread_name='THREAD_NUMBER'):
 def get_proxy_api(application=None, proxy_name='PROXY_API'):
     """获取代理API"""
     api_url = ''
-    if application is not None and application != '':
-        items = get_env('DISABLE_PROXY').split('&')
+    disable = get_env('DISABLE_PROXY')
+    if application is not None and application != '' and disable is not None and disable != '':
+        items = disable.split('&')
         if application in items:
             log.info("当前任务已禁用代理")
             return api_url
@@ -114,7 +115,6 @@ def get_env(env_name):
 
 
 proxies = []
-lock = threading.RLock()
 
 
 def get_proxy(api_url):
