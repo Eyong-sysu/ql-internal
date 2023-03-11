@@ -12,7 +12,7 @@ from utils.CommonUtil import get_proxy, log, lock, write_txt, get_env
 from utils.QLTask import QLTask, main
 
 client_key = get_env("CLIENT_KEY")
-client_key = '75290389375fa20623f0401c6e9453291874a81c16796'
+
 if client_key is None or client_key == '':
     log.info("未设置CLIENT_KEY，请设置环境变量CLIENT_KEY后启动")
     exit()
