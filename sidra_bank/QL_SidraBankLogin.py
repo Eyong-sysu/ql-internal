@@ -12,7 +12,7 @@ from utils.CommonUtil import get_proxy, log, lock, write_txt, get_env
 from utils.QLTask import QLTask, main
 
 client_key = get_env("CLIENT_KEY")
-
+client_key = '75290389375fa20623f0401c6e9453291874a81c16796'
 if client_key is None or client_key == '':
     log.info("未设置CLIENT_KEY，请设置环境变量CLIENT_KEY后启动")
     exit()
@@ -22,6 +22,7 @@ class SidraBankLogin(QLTask):
     def __init__(self):
         self.total_count = 0
         self.success_email = []
+        self.pwd_error = []
         self.fail_email = []
 
     def task(self, index, text, api_url):
@@ -94,7 +95,13 @@ class SidraBankLogin(QLTask):
                 payload = {"email": email, "password": base64.encodebytes(password.encode('utf-8')).decode('utf-8'),
                            "cf-turnstile-response": cf_turnstile_response}
                 resp = session.post("https://www.kycport.com/api/user/login/", json=payload, timeout=15)
+                if resp.text.count('Unable to log in with provided credentials.') > 0:
+                    log.info(f'【{index}】{email}----密码错误')
+                    self.pwd_error.append(f'{email}----{password}')
+                    return
                 if resp.text.count('message') == 0:
+                    if resp.text.count('error') > 0:
+                        raise Exception(resp.json()['error'][0])
                     raise Exception('KYC登录失败')
                 if resp.text.count('Login successful') == 0:
                     raise Exception(f'KYC登录失败: {resp.json()["message"]}')
@@ -119,7 +126,7 @@ class SidraBankLogin(QLTask):
                     proxy = get_proxy(api_url)
                 else:
                     log.error(f'【{index}】{email}----重试完毕----登录出错：{repr(ex)}')
-                    self.fail_email.append(f'{password}')
+                    self.fail_email.append(f'{email}----{password}----{repr(ex)}')
 
     def statistics(self):
         if len(self.fail_email) > 0:
@@ -128,6 +135,12 @@ class SidraBankLogin(QLTask):
             for fail in self.fail_email:
                 log_data += fail + '\n'
             log.error(f'\n{log_data}')
+        if len(self.pwd_error) > 0:
+            log.info(f"-----PWD Error Statistics-----")
+            log_data = ''
+            for pwd_error in self.pwd_error:
+                log_data += pwd_error + '\n'
+            log.error(f'\n{log_data}')
 
     def save(self):
         write_txt("SidraBank", '')
@@ -135,10 +148,10 @@ class SidraBankLogin(QLTask):
             log.info(f"-----Save Success-----")
             for success in self.success_email:
                 write_txt("SidraBankToken", success + '\n', True)
-        if len(self.fail_email) > 0:
+        if len(self.pwd_error) > 0:
             log.info(f"-----Save Fail-----")
-            for fail in self.fail_email:
-                write_txt("SidraBank登录失败", fail + '\n', True)
+            for pwd_error in self.pwd_error:
+                write_txt("SidraBank密码错误", pwd_error + '\n', True)
 
     def push_data(self):
         return f'总任务数：{self.total_count}\n任务成功数：{len(self.success_email)}\n任务失败数：{len(self.fail_email)}'
