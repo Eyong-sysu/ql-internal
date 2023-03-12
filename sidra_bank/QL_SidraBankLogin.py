@@ -35,6 +35,11 @@ class SidraBankLogin(QLTask):
         lock.release()
 
         log.info(f"【{index}】{email}----正在登录")
+        if password.count('+') > 0 or password.count('&') > 0:
+            log.info(f'【{index}】{email}----密码错误')
+            self.pwd_error.append(f'{email}----{password}')
+            return
+
         proxy = get_proxy(api_url)
         session = requests.session()
         session.headers = {
