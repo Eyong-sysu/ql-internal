@@ -99,9 +99,9 @@ class SidraBankMining(QLTask):
     def save(self):
         if len(self.unauthorized) > 0:
             log.info(f"-----Save Success-----")
-            write_txt("SidraBankToken", '')
+            write_txt("SidraBank登录过期", '')
             for unauthorized in self.unauthorized:
-                write_txt("SidraBankToken", unauthorized + '\n', True)
+                write_txt("SidraBank登录过期", unauthorized + '\n', True)
 
     def push_data(self):
         return f'总任务数：{self.total_count}\n任务成功数：{self.success_count}\n时间未到数：{self.wait_count}\n登录过期数：{len(self.unauthorized)}\n任务失败数：{len(self.fail_email)}'
