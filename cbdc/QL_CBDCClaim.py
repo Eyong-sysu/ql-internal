@@ -72,6 +72,9 @@ class CBDCClaim(QLTask):
                 lock.release()
                 break
             except Exception as ex:
+                if repr(ex).count('his account has been banned') > 0:
+                    log.error(f'【{index}】{email}----账号封禁')
+                    return
                 if i != 2:
                     log.error(f'【{index}】{email}----进行第{i + 1}次重试----领取出错：{repr(ex)}')
                     proxy = get_proxy(api_url)
