@@ -20,8 +20,8 @@ class AviveDaily(QLTask):
     def task(self, index, text, api_url):
         split = text.split('----')
         email = split[0]
-        mac = split[1]
-        did = split[2]
+        mac = split[-3]
+        did = split[-2]
         token = split[-1]
 
         lock.acquire()
