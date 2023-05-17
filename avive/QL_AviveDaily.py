@@ -33,7 +33,7 @@ class AviveDaily(QLTask):
 
         for i in range(3):
             try:
-                payload = {"bonus_type": 2}
+                payload = {"bonus_type": 1}
                 url = "https://api.avive.world/v1/mint/task/bonus/collect/?" + get_params(mac, did, json.dumps(payload))
                 resp = requests.post(url, json=payload, headers=get_headers(url, token), proxies={"https": proxy})
                 lock.acquire()
