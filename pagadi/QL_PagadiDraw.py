@@ -43,7 +43,7 @@ class PagadiDraw(QLTask):
                     self.success_count += 1
                     lock.release()
                     break
-                elif resp.text.count('status') and resp.json()['message'] == '請勿重複簽到':
+                elif resp.text.count('status') and resp.json()['message'] == '抽獎次數不足':
                     log.info(f'【{index}】{email}----抽獎次數不足')
                     break
                 elif resp.text.count('message'):
