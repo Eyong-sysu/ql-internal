@@ -46,6 +46,8 @@ class PagadiSign(QLTask):
                 elif resp.text.count('status') and resp.json()['message'] == '請勿重複簽到':
                     log.info(f'【{index}】{email}----請勿重複簽到')
                     break
+                elif resp.text.count('message'):
+                    raise Exception(resp.json()['message'])
                 raise Exception(resp.text)
             except Exception as ex:
                 if i != 2:

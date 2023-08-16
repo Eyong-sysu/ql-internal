@@ -38,7 +38,7 @@ class PagadiDraw(QLTask):
             try:
                 resp = session.get("https://www.pagadi.vip/api/raffle/1")
                 if resp.text.count('status') and resp.json()['code'] == 200:
-                    log.info(f'【{index}】{email}----抽奖成功：'+resp.json()['data']['value'])
+                    log.info(f'【{index}】{email}----抽奖成功：' + resp.json()['data']['value'])
                     lock.acquire()
                     self.success_count += 1
                     lock.release()
@@ -46,6 +46,8 @@ class PagadiDraw(QLTask):
                 elif resp.text.count('status') and resp.json()['message'] == '請勿重複簽到':
                     log.info(f'【{index}】{email}----抽獎次數不足')
                     break
+                elif resp.text.count('message'):
+                    raise Exception(resp.json()['message'])
                 raise Exception(resp.text)
             except Exception as ex:
                 if i != 2:
