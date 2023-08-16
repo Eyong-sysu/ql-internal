@@ -33,7 +33,7 @@ class PagadiSign(QLTask):
         }
         proxy = get_proxy(api_url)
 
-        for i in range(3):
+        for i in range(5):
             session.proxies = {"https": proxy}
             try:
                 resp = session.get("https://www.pagadi.vip/api/sign")
@@ -45,6 +45,7 @@ class PagadiSign(QLTask):
                     break
                 elif resp.text.count('status') and resp.json()['message'] == '請勿重複簽到':
                     log.info(f'【{index}】{email}----請勿重複簽到')
+                    self.fail_email.append(f'【{index}】{email}----請勿重複簽到')
                     break
                 elif resp.text.count('message'):
                     raise Exception(resp.json()['message'])

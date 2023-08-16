@@ -33,7 +33,7 @@ class PagadiDraw(QLTask):
         }
         proxy = get_proxy(api_url)
 
-        for i in range(3):
+        for i in range(5):
             session.proxies = {"https": proxy}
             try:
                 resp = session.get("https://www.pagadi.vip/api/raffle/1")
@@ -45,17 +45,18 @@ class PagadiDraw(QLTask):
                     break
                 elif resp.text.count('status') and resp.json()['message'] == '抽獎次數不足':
                     log.info(f'【{index}】{email}----抽獎次數不足')
+                    self.fail_email.append(f'【{index}】{email}----抽獎次數不足')
                     break
                 elif resp.text.count('message'):
                     raise Exception(resp.json()['message'])
                 raise Exception(resp.text)
             except Exception as ex:
                 if i != 2:
-                    log.error(f'【{index}】{email}----进行第{i + 1}次重试----签到出错：{repr(ex)}')
+                    log.error(f'【{index}】{email}----进行第{i + 1}次重试----抽奖出错：{repr(ex)}')
                     proxy = get_proxy(api_url)
                 else:
-                    log.error(f'【{index}】{email}----重试完毕----签到出错：{repr(ex)}')
-                    self.fail_email.append(f'【{index}】{email}----签到出错：{repr(ex)}')
+                    log.error(f'【{index}】{email}----重试完毕----抽奖出错：{repr(ex)}')
+                    self.fail_email.append(f'【{index}】{email}----抽奖出错：{repr(ex)}')
 
     def statistics(self):
         if len(self.fail_email) > 0:
